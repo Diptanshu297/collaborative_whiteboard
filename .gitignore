@@ -12,3 +12,10 @@ Thumbs.db
 
 # Env
 .env
+
+# Installer packages
+*.deb
+*.rpm
+
+# Cloudflared logs/configs
+cloudflared.deb
