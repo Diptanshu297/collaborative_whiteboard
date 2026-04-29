@@ -5,6 +5,12 @@ const sizeEl = document.getElementById('size');
 const clearBtn = document.getElementById('clear');
 const statusEl = document.getElementById('status');
 const cursorsEl = document.getElementById('cursors');
+const roomLabel = document.getElementById('room-label');
+
+// Extract room name from URL like /r/maths
+const roomName = decodeURIComponent(location.pathname.replace(/^\/r\//, ''));
+roomLabel.textContent = roomName;
+document.title = `${roomName} · Whiteboard`;
 
 function resize() {
   canvas.width = window.innerWidth;
@@ -14,7 +20,7 @@ resize();
 window.addEventListener('resize', resize);
 
 const wsProto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-const ws = new WebSocket(`${wsProto}//${location.host}/ws`);
+const ws = new WebSocket(`${wsProto}//${location.host}/ws/${encodeURIComponent(roomName)}`);
 
 let myId = null;
 const otherCursors = new Map();
@@ -52,23 +58,18 @@ canvas.addEventListener('pointerdown', (e) => {
   drawing = true;
   lastX = e.offsetX;
   lastY = e.offsetY;
-  // Capture the pointer so we keep getting events even if it slides off canvas
   canvas.setPointerCapture(e.pointerId);
   e.preventDefault();
 });
 
 canvas.addEventListener('pointermove', (e) => {
   const x = e.offsetX, y = e.offsetY;
-
-  // For mouse: always broadcast cursor. For touch: only while drawing
-  // (touch has no "hover" — finger is either down or absent).
   const now = performance.now();
   const shouldSendCursor = e.pointerType === 'touch' ? drawing : true;
   if (shouldSendCursor && ws.readyState === WebSocket.OPEN && now - lastCursorSent > CURSOR_THROTTLE_MS) {
     ws.send(JSON.stringify({ type: 'cursor', x, y }));
     lastCursorSent = now;
   }
-
   if (!drawing) return;
   const color = colorEl.value, size = +sizeEl.value;
   drawLine(lastX, lastY, x, y, color, size);
@@ -85,7 +86,6 @@ function stopDrawing(e) {
     try { canvas.releasePointerCapture(e.pointerId); } catch {}
   }
 }
-
 canvas.addEventListener('pointerup', stopDrawing);
 canvas.addEventListener('pointercancel', stopDrawing);
 canvas.addEventListener('pointerleave', stopDrawing);

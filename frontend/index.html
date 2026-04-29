@@ -2,23 +2,61 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Collaborative Whiteboard</title>
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
-  <header>
-    <h1>🎨 Whiteboard</h1>
-    <div class="controls">
-      <input type="color" id="color" value="#222222">
-      <input type="range" id="size" min="1" max="30" value="4">
-      <button id="clear">Clear</button>
-      <span id="status">Connecting…</span>
-    </div>
-  </header>
-  <main>
-    <canvas id="board"></canvas>
-    <div id="cursors"></div>
+<body class="landing">
+  <main class="landing-card">
+    <h1>🎨 Collaborative Whiteboard</h1>
+    <p class="subtitle">Draw together in real time. Pick a room name to create or join.</p>
+
+    <form id="join-form" autocomplete="off">
+      <input
+        id="room-input"
+        type="text"
+        placeholder="room-name"
+        maxlength="32"
+        pattern="[a-zA-Z0-9_-]+"
+        required
+        autofocus>
+      <button type="submit">Join</button>
+    </form>
+    <p class="hint">Letters, numbers, dashes, underscores. Up to 32 characters.</p>
+
+    <section class="active-rooms">
+      <h2>Active rooms</h2>
+      <ul id="rooms-list"><li class="empty">No active rooms.</li></ul>
+    </section>
   </main>
-  <script src="script.js"></script>
+
+  <script>
+    const form = document.getElementById('join-form');
+    const input = document.getElementById('room-input');
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = input.value.trim();
+      if (!/^[a-zA-Z0-9_-]{1,32}$/.test(name)) return;
+      window.location.href = `/r/${name}`;
+    });
+
+    async function loadRooms() {
+      try {
+        const res = await fetch('/api/rooms');
+        const rooms = await res.json();
+        const list = document.getElementById('rooms-list');
+        if (!rooms.length) {
+          list.innerHTML = '<li class="empty">No active rooms.</li>';
+          return;
+        }
+        list.innerHTML = rooms
+          .map(r => `<li><a href="/r/${r.name}">${r.name}</a><span>${r.users} 👤</span></li>`)
+          .join('');
+      } catch {}
+    }
+    loadRooms();
+    setInterval(loadRooms, 5000);
+  </script>
 </body>
 </html>
