@@ -125,8 +125,9 @@ collaborative_whiteboard/
 - [x] Real-time multi-user drawing
 - [x] Live colored cursors per user
 - [x] Touch and stylus support
-- [ ] Named rooms (separate boards per URL)
-- [ ] Stroke persistence across server restarts
+- [x] Named rooms (separate boards per URL)
+- [x] Stroke persistence within a session (in-memory, per room)
+- [ ] Disk persistence (SQLite, survives server restarts)
 - [ ] Undo / redo
 - [ ] Eraser tool
 - [ ] PNG export
