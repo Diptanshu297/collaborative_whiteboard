@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Collaborative Whiteboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>🎨 Whiteboard</h1>
+    <div class="controls">
+      <input type="color" id="color" value="#222222">
+      <input type="range" id="size" min="1" max="30" value="4">
+      <button id="clear">Clear</button>
+      <span id="status">Connecting…</span>
+    </div>
+  </header>
+  <canvas id="board"></canvas>
+  <script src="script.js"></script>
+</body>
+</html>
