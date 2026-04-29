@@ -13,10 +13,11 @@ function resize() {
 resize();
 window.addEventListener('resize', resize);
 
-const ws = new WebSocket(`ws://${location.host}/ws`);
+const wsProto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+const ws = new WebSocket(`${wsProto}//${location.host}/ws`);
 
 let myId = null;
-const otherCursors = new Map(); // userId -> { el }
+const otherCursors = new Map();
 
 ws.onopen = () => {
   statusEl.textContent = '● Connected';
@@ -25,7 +26,6 @@ ws.onopen = () => {
 ws.onclose = () => {
   statusEl.textContent = '○ Disconnected';
   statusEl.classList.remove('connected');
-  // Clear other cursors when we disconnect
   otherCursors.forEach(({ el }) => el.remove());
   otherCursors.clear();
 };
@@ -48,18 +48,23 @@ let drawing = false, lastX = 0, lastY = 0;
 let lastCursorSent = 0;
 const CURSOR_THROTTLE_MS = 40;
 
-canvas.addEventListener('mousedown', (e) => {
+canvas.addEventListener('pointerdown', (e) => {
   drawing = true;
   lastX = e.offsetX;
   lastY = e.offsetY;
+  // Capture the pointer so we keep getting events even if it slides off canvas
+  canvas.setPointerCapture(e.pointerId);
+  e.preventDefault();
 });
 
-canvas.addEventListener('mousemove', (e) => {
+canvas.addEventListener('pointermove', (e) => {
   const x = e.offsetX, y = e.offsetY;
 
-  // Always send cursor position (throttled)
+  // For mouse: always broadcast cursor. For touch: only while drawing
+  // (touch has no "hover" — finger is either down or absent).
   const now = performance.now();
-  if (ws.readyState === WebSocket.OPEN && now - lastCursorSent > CURSOR_THROTTLE_MS) {
+  const shouldSendCursor = e.pointerType === 'touch' ? drawing : true;
+  if (shouldSendCursor && ws.readyState === WebSocket.OPEN && now - lastCursorSent > CURSOR_THROTTLE_MS) {
     ws.send(JSON.stringify({ type: 'cursor', x, y }));
     lastCursorSent = now;
   }
@@ -74,8 +79,16 @@ canvas.addEventListener('mousemove', (e) => {
   lastY = y;
 });
 
-canvas.addEventListener('mouseup', () => drawing = false);
-canvas.addEventListener('mouseleave', () => drawing = false);
+function stopDrawing(e) {
+  drawing = false;
+  if (e && e.pointerId !== undefined) {
+    try { canvas.releasePointerCapture(e.pointerId); } catch {}
+  }
+}
+
+canvas.addEventListener('pointerup', stopDrawing);
+canvas.addEventListener('pointercancel', stopDrawing);
+canvas.addEventListener('pointerleave', stopDrawing);
 
 function drawLine(x0, y0, x1, y1, color, size) {
   ctx.beginPath();
