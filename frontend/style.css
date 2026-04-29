@@ -14,6 +14,8 @@ header {
   background: #fff;
   border-bottom: 1px solid #e2e2e2;
   box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  position: relative;
+  z-index: 20;
 }
 
 h1 { font-size: 1.1rem; font-weight: 600; }
@@ -39,4 +41,43 @@ button:hover { background: #f0f0f0; }
 #status { font-size: 0.85rem; color: #888; }
 #status.connected { color: #2a9d2a; }
 
+main { position: relative; width: 100%; }
+
 canvas { display: block; background: #fff; cursor: crosshair; }
+
+#cursors {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.cursor {
+  position: absolute;
+  left: 0; top: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: transform 0.05s linear;
+}
+
+.cursor-dot {
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  margin-top: -6px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+  flex-shrink: 0;
+}
+
+.cursor-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #fff;
+  padding: 1px 6px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
