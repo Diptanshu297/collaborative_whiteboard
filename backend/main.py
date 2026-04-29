@@ -16,11 +16,16 @@ PALETTE = ["#e6194b", "#3cb44b", "#4363d8", "#f58231", "#911eb4",
 
 ROOM_NAME_RE = re.compile(r"^[a-zA-Z0-9_-]{1,32}$")
 
+# Cap the stroke history per room so memory doesn't grow forever.
+# At ~150 bytes per draw event, 50k strokes is ~7.5 MB per active room.
+MAX_STROKES_PER_ROOM = 50_000
+
 
 class Room:
     def __init__(self, name: str):
         self.name = name
         self.connections: dict[WebSocket, dict] = {}
+        self.history: list[dict] = []  # persistent stroke log
         self._counter = 0
 
     async def connect(self, ws: WebSocket) -> dict:
@@ -31,7 +36,17 @@ class Room:
         }
         self._counter += 1
         self.connections[ws] = user
+
+        # Send welcome with the user's identity
         await ws.send_text(json.dumps({"type": "welcome", **user, "room": self.name}))
+
+        # Replay the room's history to this newly-connected client
+        if self.history:
+            await ws.send_text(json.dumps({
+                "type": "history",
+                "events": self.history,
+            }))
+
         return user
 
     def disconnect(self, ws: WebSocket) -> dict | None:
@@ -45,6 +60,17 @@ class Room:
                 await conn.send_text(message)
             except Exception:
                 pass
+
+    def remember(self, event: dict):
+        """Add a draw event to the room's persistent history."""
+        self.history.append(event)
+        if len(self.history) > MAX_STROKES_PER_ROOM:
+            # Drop oldest 10% to amortize the trim cost
+            drop = MAX_STROKES_PER_ROOM // 10
+            self.history = self.history[drop:]
+
+    def clear_history(self):
+        self.history.clear()
 
     @property
     def user_count(self) -> int:
@@ -61,8 +87,9 @@ class RoomManager:
         return self.rooms[name]
 
     def cleanup_if_empty(self, name: str):
+        """Don't delete rooms with stroke history — only delete truly empty ones."""
         room = self.rooms.get(name)
-        if room and room.user_count == 0:
+        if room and room.user_count == 0 and not room.history:
             del self.rooms[name]
 
 
@@ -73,9 +100,8 @@ manager = RoomManager()
 
 @app.get("/api/rooms")
 def list_rooms():
-    """Return active rooms with user counts."""
     return [
-        {"name": r.name, "users": r.user_count}
+        {"name": r.name, "users": r.user_count, "strokes": len(r.history)}
         for r in manager.rooms.values()
     ]
 
@@ -103,8 +129,16 @@ async def ws_endpoint(ws: WebSocket, room_name: str):
                 msg = json.loads(raw)
             except json.JSONDecodeError:
                 continue
+
             msg["userId"] = user["id"]
             msg["userColor"] = user["color"]
+
+            # Persist draw + clear events; don't persist cursors (too noisy, ephemeral)
+            if msg.get("type") == "draw":
+                room.remember(msg)
+            elif msg.get("type") == "clear":
+                room.clear_history()
+
             await room.broadcast(json.dumps(msg), sender=ws)
     except WebSocketDisconnect:
         info = room.disconnect(ws)
@@ -115,5 +149,4 @@ async def ws_endpoint(ws: WebSocket, room_name: str):
         manager.cleanup_if_empty(room_name)
 
 
-# Static frontend (landing page at /, assets at /style.css etc.)
 app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")

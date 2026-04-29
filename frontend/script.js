@@ -39,6 +39,13 @@ ws.onmessage = (event) => {
   const d = JSON.parse(event.data);
   if (d.type === 'welcome') {
     myId = d.id;
+  } else if (d.type === 'history') {
+    // Replay all past strokes from the room's history
+    for (const ev of d.events) {
+      if (ev.type === 'draw') {
+        drawLine(ev.x0, ev.y0, ev.x1, ev.y1, ev.color, ev.size);
+      }
+    }
   } else if (d.type === 'draw') {
     drawLine(d.x0, d.y0, d.x1, d.y1, d.color, d.size);
   } else if (d.type === 'clear') {
