@@ -8,6 +8,8 @@ body {
   user-select: none;
 }
 
+/* ---------- Whiteboard layout ---------- */
+
 header {
   display: flex;
   align-items: center;
@@ -22,6 +24,7 @@ header {
 }
 
 h1 { font-size: 1.1rem; font-weight: 600; }
+#room-label { color: #4363d8; }
 
 .controls {
   display: flex;
@@ -31,16 +34,18 @@ h1 { font-size: 1.1rem; font-weight: 600; }
   flex-wrap: wrap;
 }
 
-button {
+button, .leave-btn {
   padding: 0.45rem 0.9rem;
   border: 1px solid #ccc;
   background: #fff;
   border-radius: 6px;
   cursor: pointer;
   font-size: 0.875rem;
+  text-decoration: none;
+  color: #333;
+  display: inline-block;
 }
-
-button:hover { background: #f0f0f0; }
+button:hover, .leave-btn:hover { background: #f0f0f0; }
 
 #status { font-size: 0.85rem; color: #888; }
 #status.connected { color: #2a9d2a; }
@@ -51,7 +56,7 @@ canvas {
   display: block;
   background: #fff;
   cursor: crosshair;
-  touch-action: none; /* stops browser scroll/zoom on touch */
+  touch-action: none;
 }
 
 #cursors {
@@ -97,5 +102,101 @@ canvas {
   .controls { gap: 0.5rem; }
   #status { font-size: 0.75rem; }
   #size { width: 80px; }
-  button { padding: 0.4rem 0.7rem; font-size: 0.8rem; }
+  button, .leave-btn { padding: 0.4rem 0.7rem; font-size: 0.8rem; }
 }
+
+/* ---------- Landing page ---------- */
+
+body.landing {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 1rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.landing-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 2.5rem;
+  max-width: 460px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+
+.landing-card h1 {
+  font-size: 1.6rem;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  color: #666;
+  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+}
+
+#join-form {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+#room-input {
+  flex: 1;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  outline: none;
+}
+#room-input:focus { border-color: #667eea; }
+
+#join-form button {
+  padding: 0.7rem 1.4rem;
+  background: #667eea;
+  color: #fff;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 8px;
+}
+#join-form button:hover { background: #5568d3; }
+
+.hint {
+  font-size: 0.8rem;
+  color: #999;
+  margin-bottom: 1.8rem;
+}
+
+.active-rooms h2 {
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #888;
+  margin-bottom: 0.6rem;
+}
+
+#rooms-list {
+  list-style: none;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+#rooms-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid #eee;
+}
+#rooms-list li:last-child { border-bottom: none; }
+#rooms-list li.empty { color: #aaa; justify-content: center; }
+#rooms-list a {
+  color: #4363d8;
+  text-decoration: none;
+  font-weight: 500;
+}
+#rooms-list a:hover { text-decoration: underline; }
+#rooms-list span { color: #888; font-size: 0.85rem; }
