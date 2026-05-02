@@ -60,6 +60,16 @@ The server maintains a single shared connection pool. Each event (`draw`, `curso
 
 ---
 
+## 📸 Demo
+
+### Landing page
+
+![Landing page](docs/landing.png)
+
+### Real-time whiteboard
+
+![Whiteboard in action](docs/whiteboard.png)
+
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -125,8 +135,10 @@ collaborative_whiteboard/
 - [x] Real-time multi-user drawing
 - [x] Live colored cursors per user
 - [x] Touch and stylus support
-- [ ] Named rooms (separate boards per URL)
-- [ ] Stroke persistence across server restarts
+- [x] Named rooms (separate boards per URL)
+- [x] Stroke persistence within a session (in-memory, per room)
+- [x] Terminal-aesthetic landing page with animated hero
+- [ ] Disk persistence (SQLite, survives server restarts)
 - [ ] Undo / redo
 - [ ] Eraser tool
 - [ ] PNG export
